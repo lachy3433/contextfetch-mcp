@@ -1,0 +1,70 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.contextfetch/mcp",
+  "title": "ContextFetch",
+  "description": "Web search and any page as LLM-ready Markdown for AI agents. Free keyless tier, no signup.",
+  "version": "1.0.1",
+  "websiteUrl": "https://contextfetch.dev",
+  "repository": {
+    "url": "https://github.com/lachy3433/contextfetch-mcp",
+    "source": "github"
+  },
+  "icons": [
+    {
+      "src": "https://contextfetch.dev/logomark.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ]
+    },
+    {
+      "src": "https://contextfetch.dev/apple-touch-icon.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "180x180"
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@contextfetch/mcp",
+      "version": "1.0.1",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "CONTEXTFETCH_API_KEY",
+          "description": "ContextFetch API key. Leave unset for the free keyless tier (25 requests per day per IP).",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "CONTEXTFETCH_API_BASE",
+          "description": "API base URL, only for a self-hosted engine.",
+          "isRequired": false,
+          "isSecret": false,
+          "default": "https://api.contextfetch.dev",
+          "format": "string"
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.contextfetch.dev/mcp",
+      "headers": [
+        {
+          "name": "x-api-key",
+          "description": "ContextFetch API key. Leave unset for the free keyless tier (25 requests per day per IP).",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "@contextfetch/mcp",
+  "version": "1.0.1",
+  "mcpName": "dev.contextfetch/mcp",
+  "description": "ContextFetch MCP server: neural web search and LLM-ready Markdown for AI agents from $0.75 per 1,000. Works keyless, zero signup.",
+  "type": "module",
+  "bin": {
+    "contextfetch-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "node -e \"require('node:fs').chmodSync('dist/index.js', 0o755)\"",
+    "pretest": "npm run build",
+    "test": "node --test test/stdio.test.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "18.19.130",
+    "typescript": "7.0.2"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "search",
+    "web-search",
+    "markdown",
+    "exa-alternative",
+    "tavily-alternative",
+    "ai-agents",
+    "claude"
+  ],
+  "homepage": "https://contextfetch.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lachy3433/contextfetch-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lachy3433/contextfetch-mcp/issues"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  }
+}
