@@ -49,6 +49,7 @@ interface ApiResponse {
 // POST /v1/research
 interface ResearchResponse extends ApiResponse {
   evidence?: string;
+  report?: { markdown?: string };
   subQueries?: { query: string; status: string; results?: number; error?: { error?: string; message?: string } | string }[];
 }
 
@@ -303,16 +304,30 @@ server.registerTool(
       num_results: numResults,
       include_domains: z.array(z.string()).optional().describe('Only return results from these domains, e.g. ["docs.python.org"].'),
       exclude_domains: z.array(z.string()).optional().describe("Never return results from these domains."),
+      time_range: z.enum(["day", "week", "month", "year"]).optional().describe("Only pages published in the last day, week, month or year."),
+      start_published_date: z.string().min(1).optional().describe("Only pages published on or after this date (YYYY-MM-DD). Undated pages are dropped."),
+      end_published_date: z.string().min(1).optional().describe("Only pages published on or before this date (YYYY-MM-DD)."),
+      topic: z.enum(["general", "news", "finance"]).optional().describe("news: news sources, recent pages first. finance: SEC filings and finance sites. Default general."),
+      category: z.string().min(1).optional().describe("Focus on one kind of page: company, research paper, news, pdf, github, personal site, linkedin profile, financial report, people."),
+      country: z.string().min(1).optional().describe("Two-letter country code (US, DE): that country's results rank higher."),
+      language: z.string().min(1).optional().describe("Two-letter language code (en, de): results in that language rank higher."),
     },
     annotations,
   },
-  async ({ query, num_results, include_domains, exclude_domains }) =>
+  async ({ query, num_results, include_domains, exclude_domains, time_range, start_published_date, end_published_date, topic, category, country, language }) =>
     toMarkdown(
       await api("/v1/search", {
         query,
         numResults: num_results,
         includeDomains: include_domains,
         excludeDomains: exclude_domains,
+        timeRange: time_range,
+        startPublishedDate: start_published_date,
+        endPublishedDate: end_published_date,
+        topic,
+        category,
+        userLocation: country,
+        language,
         contents: SEARCH_CONTENTS,
       }),
     ),
@@ -383,8 +398,7 @@ server.registerTool(
   {
     title: "ContextFetch deep research",
     description:
-      "Same as contextfetch_research (kept for existing setups): up to 3 sub-queries run server-side, sources deduped and ranked against the question, one Markdown evidence pack with numbered sources and query-pruned passages. Each sub-query is one search and costs 1 credit. You SHOULD pass your own `sub_queries` (up to 3 distinct angles on the question) for better coverage. " +
-      subQueryRules,
+      "Deep research in one call, no LLM: a deep search of the question, its sub-topics (or your sub_queries) as searches of their own, and the pages its list and index results link to, returned as one cited report: summary, key facts, a section per sub-topic and the sources, every passage quoted verbatim with [n]. Costs 10 credits. For a quick evidence pack use contextfetch_research.",
     inputSchema: {
       query: z.string().trim().min(1).describe("The research question."),
       sub_queries: z
@@ -397,10 +411,15 @@ server.registerTool(
     },
     annotations,
   },
-  async ({ query, sub_queries, num_results_per_query }) =>
-    researchMarkdown(
-      await api<ResearchResponse>("/v1/research", { query, subQueries: sub_queries, numResultsPerQuery: Math.min(num_results_per_query, 10) }),
-    ),
+  async ({ query, sub_queries, num_results_per_query }) => {
+    const data = await api<ResearchResponse>("/v1/research", {
+      query,
+      subQueries: sub_queries,
+      numResultsPerQuery: Math.min(num_results_per_query, 10),
+      depth: "deep",
+    });
+    return text([data.notice ? `> ${data.notice}` : "", data.report?.markdown ?? "No results."].filter(Boolean).join("\n\n"));
+  },
 );
 
 server.registerTool(

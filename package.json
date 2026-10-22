@@ -1,6 +1,6 @@
 {
   "name": "@contextfetch/mcp",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "mcpName": "dev.contextfetch/mcp",
   "description": "ContextFetch MCP server: neural web search and LLM-ready Markdown for AI agents from $0.75 per 1,000. Works keyless, zero signup.",
   "type": "module",

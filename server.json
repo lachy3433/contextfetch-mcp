@@ -3,7 +3,7 @@
   "name": "dev.contextfetch/mcp",
   "title": "ContextFetch",
   "description": "Web search and any page as LLM-ready Markdown for AI agents. Free keyless tier, no signup.",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "websiteUrl": "https://contextfetch.dev",
   "repository": {
     "url": "https://github.com/lachy3433/contextfetch-mcp",
@@ -29,7 +29,7 @@
     {
       "registryType": "npm",
       "identifier": "@contextfetch/mcp",
-      "version": "1.0.1",
+      "version": "1.1.0",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

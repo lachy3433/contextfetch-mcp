@@ -78,7 +78,7 @@ test("tools/list shows 11 tools", async () => {
     "contextfetch_search",
   ]);
   const deep = tools.find((t) => t.name === "contextfetch_deep_research");
-  assert.match(deep.description, /SHOULD pass your own `sub_queries`/);
+  assert.match(deep.description, /cited report[\s\S]*10 credits/);
   assert.equal(deep.inputSchema.properties.sub_queries.maxItems, 3);
   const research = tools.find((t) => t.name === "contextfetch_research");
   assert.equal(research.inputSchema.properties.sub_queries.maxItems, 5);
@@ -187,13 +187,14 @@ test("research rejects more than 5 sub-queries before calling the API", async ()
   assert.equal(requests.length, 0);
 });
 
-test("deep_research routes to /v1/research, lets the server derive sub-queries and caps results at 10", async () => {
-  handler = () => research();
+test("deep_research asks /v1/research for depth deep and returns its report", async () => {
+  handler = () => research({ report: { markdown: "# Research: python asyncio timeout\n\n## Summary\n\n> quoted [1]" } });
   const r = await client.callTool({ name: "contextfetch_deep_research", arguments: { query: "python asyncio timeout", num_results_per_query: 25 } });
   assert.equal(r.isError, undefined, textOf(r));
   assert.deepEqual(requests.map(({ path, body }) => ({ path, body })), [
-    { path: "/v1/research", body: { query: "python asyncio timeout", numResultsPerQuery: 10 } },
+    { path: "/v1/research", body: { query: "python asyncio timeout", numResultsPerQuery: 10, depth: "deep" } },
   ]);
+  assert.match(textOf(r), /^# Research: python asyncio timeout/m);
 });
 
 test("deep_research surfaces 402 without retrying", async () => {
