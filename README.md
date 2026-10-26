@@ -1,6 +1,32 @@
-# @contextfetch/mcp
+# ContextFetch MCP server
 
-MCP server for [ContextFetch](https://contextfetch.dev): neural web search and clean, LLM-ready Markdown for AI agents from $0.75 per 1,000 searches. Works with zero signup: no key needed for the free tier.
+Web search and clean, LLM-ready Markdown for AI agents: $1 per 1,000 searches, and 25 a day free with no key and no signup.
+
+[![npm](https://img.shields.io/npm/v/@contextfetch/mcp)](https://www.npmjs.com/package/@contextfetch/mcp) [![MCP registry](https://img.shields.io/badge/MCP_registry-dev.contextfetch%2Fmcp-1f6f70)](https://registry.modelcontextprotocol.io/v0/servers?search=contextfetch) [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
+```bash
+claude mcp add contextfetch -- npx -y @contextfetch/mcp
+```
+
+That is the whole setup for Claude Code. Then ask your agent something that needs the web:
+
+> Search for how Postgres SKIP LOCKED works for job queues
+
+`contextfetch_search` returns each page as Markdown, cut down to the passages that answer the query:
+
+```markdown
+## 1. PostgreSQL Job Queues with SKIP LOCKED | CodeNotes
+
+https://codenotes.tech/blog/postgresql-job-queues-with-skip-locked · score 1.000
+
+FOR UPDATE SKIP LOCKED is useful because it lets many workers claim different rows without blocking on rows
+another worker has already locked. But it is only the claiming primitive. A production queue also needs the
+right schema, indexes, retry policy, stuck-job recovery, cleanup, monitoring, and replay-safe handlers.
+...
+```
+
+11 tools: search, page to Markdown, find similar, research, answer, crawl, site map, balance, free key and auto top-up.
+Exa- and Tavily-compatible API underneath, at [contextfetch.dev](https://contextfetch.dev).
 
 ## Install
 
@@ -52,14 +78,14 @@ Requires Node.js 18 or newer.
 
 | Tool | Arguments | What it does | Cost |
 |---|---|---|---|
-| `contextfetch_search` | `query`, `num_results` (1-25, default 5), `include_domains?`, `exclude_domains?` | Web search. Each result comes back as title, URL and only the passages relevant to your query (cross-encoder pruned Markdown). | 1 credit |
-| `contextfetch_extract_url` | `url`, `query?` | Any public page (docs, articles, GitHub files, arXiv) as clean Markdown with tables kept. With `query`, returns only the relevant passages. | 1 credit |
-| `contextfetch_find_similar` | `url`, `num_results` (1-25, default 5) | Pages similar to a URL, excluding its own domain. | 1 credit |
-| `contextfetch_research` | `query`, `sub_queries?` (up to 5), `num_results_per_query` (1-10, default 5) | Server-side research: runs the sub-queries concurrently, dedupes pages by URL, ranks them all against `query` with the cross-encoder and returns one Markdown evidence pack (numbered `[n]` sources with their query-pruned passages, quoted verbatim; nothing generated), headed by the sub-queries, source count, tokens and credits used. | 1 credit per sub-query (max 5) |
-| `contextfetch_deep_research` | `query`, `sub_queries?` (up to 3), `num_results_per_query` (1-25, default 5; at most 10 used) | The earlier name of `contextfetch_research`, kept for existing setups: same server-side evidence pack, up to 3 sub-queries. | 1 credit per sub-query (max 3) |
-| `contextfetch_answer` | `query`, `num_results` (1-10, default 5) | Extractive answer: the best-scoring passages of the top pages, quoted verbatim with `[n]` markers and a numbered source list. No text is generated, so it suits factual lookups more than open-ended questions. | 1 credit |
-| `contextfetch_crawl` | `url`, `max_depth` (0-3, default 1), `limit` (1-50, default 10), `query?`, `include_paths?`, `exclude_paths?` (regexes on the URL path) | Crawls one site from `url` (same-site links, robots.txt obeyed) and returns each page as Markdown with its depth. With `query`, pages are ranked by relevance and pruned to the relevant passages. | 1 credit per page returned |
-| `contextfetch_map` | `url`, `limit` (1-5,000, default 100), `include_paths?`, `exclude_paths?` | Lists a site's URLs from its sitemaps and the start page's links without fetching the pages. | 1 credit |
+| `contextfetch_search` | `query`, `num_results` (1-25, default 5), `include_domains?`, `exclude_domains?` | Web search. Each result comes back as title, URL and only the passages relevant to your query (cross-encoder pruned Markdown). | $1 per 1,000 |
+| `contextfetch_extract_url` | `url`, `query?` | Any public page (docs, articles, GitHub files, arXiv) as clean Markdown with tables kept. With `query`, returns only the relevant passages. | $1 per 1,000 |
+| `contextfetch_find_similar` | `url`, `num_results` (1-25, default 5) | Pages similar to a URL, excluding its own domain. | $1 per 1,000 |
+| `contextfetch_research` | `query`, `sub_queries?` (up to 5), `num_results_per_query` (1-10, default 5) | Server-side research: runs the sub-queries concurrently, dedupes pages by URL, ranks them all against `query` with the cross-encoder and returns one Markdown evidence pack (numbered `[n]` sources with their query-pruned passages, quoted verbatim; nothing generated), headed by the sub-queries, source count, tokens and credits used. | $1 per 1,000 sub-queries (max 5) |
+| `contextfetch_deep_research` | `query`, `sub_queries?` (up to 3), `num_results_per_query` (1-25, default 5; at most 10 used) | The earlier name of `contextfetch_research`, kept for existing setups: same server-side evidence pack, up to 3 sub-queries. | $1 per 1,000 sub-queries (max 3) |
+| `contextfetch_answer` | `query`, `num_results` (1-10, default 5) | Extractive answer: the best-scoring passages of the top pages, quoted verbatim with `[n]` markers and a numbered source list. No text is generated, so it suits factual lookups more than open-ended questions. | $1 per 1,000 |
+| `contextfetch_crawl` | `url`, `max_depth` (0-3, default 1), `limit` (1-50, default 10), `query?`, `include_paths?`, `exclude_paths?` (regexes on the URL path) | Crawls one site from `url` (same-site links, robots.txt obeyed) and returns each page as Markdown with its depth. With `query`, pages are ranked by relevance and pruned to the relevant passages. | $1 per 1,000 pages |
+| `contextfetch_map` | `url`, `limit` (1-5,000, default 100), `include_paths?`, `exclude_paths?` | Lists a site's URLs from its sitemaps and the start page's links without fetching the pages. | $1 per 1,000 |
 | `contextfetch_balance` | none | Remaining credits, burn rate (credits/day over the last 7 days) and auto-reload settings, including the last auto-reload error if a payment failed. Needs `CONTEXTFETCH_API_KEY`. | free |
 | `contextfetch_get_free_key` | none | Claims the network's free API key (2,500 searches, one per network) and uses it for the rest of the session. Give it to your user to keep in `CONTEXTFETCH_API_KEY`. | free |
 | `contextfetch_auto_reload` | `enabled`, `threshold?` (100-100,000), `pack?` (`instant`, `builder`, `scale`), `monthly_max_usd?` (max 500) | Turns auto-reload on or off or changes it: when credits drop below `threshold`, the card saved at checkout buys `pack` again, up to the monthly cap. Needs `CONTEXTFETCH_API_KEY` and a saved card. The cap cannot go above $500 here. | free |
@@ -74,7 +100,7 @@ Pass your own `sub_queries` (different angles on the question); the tool descrip
 2. the query + `documentation`;
 3. the query + `benchmark` when it mentions speed, performance, latency, memory or a comparison (`vs`, `compare`), otherwise the query + `example`.
 
-A suffix the query already contains is skipped (so `react useActionState example` runs 2 searches, not 3). The whole research runs server-side in one `/v1/research` call that costs 1 credit per sub-query; a sub-query that fails is refunded and named in the header. If all fail, the tool returns the error.
+A suffix the query already contains is skipped (so `react useActionState example` runs 2 searches, not 3). The whole research runs server-side in one `/v1/research` call that costs $1 per 1,000 sub-queries; a sub-query that fails is refunded and named in the header. If all fail, the tool returns the error.
 
 ## Environment variables
 
@@ -85,16 +111,19 @@ A suffix the query already contains is skipped (so `react useActionState example
 
 ## Free tier and pricing
 
-| Pack | Price | Credits | Per 1,000 |
-|---|---|---|---|
-| Keyless trial | $0 | 25 per day per IP | free, no signup |
-| Instant | $15 | 15,000 | $1.00 |
-| Builder (most popular) | $50 | 60,000 | $0.83 |
-| Scale | $150 | 200,000 | $0.75 |
+| | Price |
+|---|---|
+| No key | 25 searches a day per network, no signup |
+| Free key (`contextfetch_get_free_key`) | 2,500 searches, one per network, no card |
+| Search, page to Markdown, answer, find similar, map | $1 per 1,000 |
+| Crawl | $1 per 1,000 pages returned |
+| Research | $1 per 1,000 sub-queries |
 
-One-time payments; credits never expire. Optional auto-reload re-buys a pack when your balance drops below a threshold, up to a monthly cap.
+Pay as you go: top up from $10 (+10% from $100, +20% from $500). The balance never expires and one balance covers
+all your keys. Monthly plans and per-key limits are in the dashboard at [contextfetch.dev/account](https://contextfetch.dev/account).
 
-When credits or the free tier run out (HTTP 402), the tool returns the packs with prices and a one-click buy link each (recommended pack first), plus a line to pass on to your user. Buy links go straight to Stripe Checkout (card, Apple Pay, Google Pay): `https://api.contextfetch.dev/buy/instant`, `/buy/builder`, `/buy/scale`. Then set `CONTEXTFETCH_API_KEY` as shown above.
+When the balance or the free tier runs out (HTTP 402), the tool returns a one-click top-up link (Stripe: card,
+Apple Pay, Google Pay) and a line to pass on to your user. Then set `CONTEXTFETCH_API_KEY` as shown above.
 
 ## Retries and connections
 
