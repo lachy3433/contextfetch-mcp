@@ -1,0 +1,492 @@
+{
+  "author": "lachy3433",
+  "authorUrl": "https://github.com/lachy3433",
+  "description": "Web search and any page as LLM-ready Markdown, pruned to your query. 25 free searches a day with no key; $1 per 1,000 after.",
+  "homepage": "https://contextfetch.dev",
+  "identifier": "lachy3433-contextfetch-mcp",
+  "name": "ContextFetch",
+  "prompts": [],
+  "resources": [],
+  "tags": [
+    "ai-agents",
+    "claude",
+    "exa-alternative",
+    "markdown",
+    "mcp",
+    "model-context-protocol",
+    "research",
+    "scraping",
+    "search",
+    "tavily-alternative",
+    "web-search"
+  ],
+  "tools": [
+    {
+      "name": "contextfetch_search",
+      "title": "ContextFetch web search",
+      "description": "Search the web and get LLM-ready Markdown. Each result has its title, URL and only the passages relevant to the query (cross-encoder pruned context), so it costs far fewer tokens than raw pages. Use for current events, documentation, APIs, research and fact checking.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Natural-language search query."
+          },
+          "num_results": {
+            "default": 5,
+            "description": "Number of results to return (1-25, default 5).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25
+          },
+          "include_domains": {
+            "description": "Only return results from these domains, e.g. [\"docs.python.org\"].",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude_domains": {
+            "description": "Never return results from these domains.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "time_range": {
+            "description": "Only pages published in the last day, week, month or year.",
+            "type": "string",
+            "enum": [
+              "day",
+              "week",
+              "month",
+              "year"
+            ]
+          },
+          "start_published_date": {
+            "description": "Only pages published on or after this date (YYYY-MM-DD). Undated pages are dropped.",
+            "type": "string",
+            "minLength": 1
+          },
+          "end_published_date": {
+            "description": "Only pages published on or before this date (YYYY-MM-DD).",
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "description": "news: news sources, recent pages first. finance: SEC filings and finance sites. Default general.",
+            "type": "string",
+            "enum": [
+              "general",
+              "news",
+              "finance"
+            ]
+          },
+          "category": {
+            "description": "Focus on one kind of page: company, research paper, news, pdf, github, personal site, linkedin profile, financial report, people.",
+            "type": "string",
+            "minLength": 1
+          },
+          "country": {
+            "description": "Two-letter country code (US, DE): that country's results rank higher.",
+            "type": "string",
+            "minLength": 1
+          },
+          "language": {
+            "description": "Two-letter language code (en, de): results in that language rank higher.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_extract_url",
+      "title": "ContextFetch URL to Markdown",
+      "description": "Fetch a public web page (docs, articles, GitHub files, arXiv papers) as clean Markdown with tables preserved. Pass `query` to get only the passages relevant to it instead of the whole page.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public http(s) URL to read."
+          },
+          "query": {
+            "description": "Optional question or topic; returns only the relevant passages.",
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_find_similar",
+      "title": "ContextFetch find similar pages",
+      "description": "Find pages similar to a given URL (alternatives, related docs, competing libraries), excluding the source domain. Returns titles, URLs and the most relevant passages as Markdown.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public http(s) URL to find similar pages for."
+          },
+          "num_results": {
+            "default": 5,
+            "description": "Number of results to return (1-25, default 5).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_research",
+      "title": "ContextFetch research (evidence pack)",
+      "description": "Research a question in one call, server-side: runs up to 5 web searches (sub-queries) concurrently, dedupes the pages by URL, ranks them all against the question with a cross-encoder and returns one Markdown evidence pack with numbered [n] sources and their query-pruned passages, quoted verbatim (no generated text). Costs 1 credit per sub-query. Pass your own `sub_queries` (distinct angles on the question) for better coverage. If omitted they are derived from `query`: the query itself, query + \"documentation\", and query + \"benchmark\" when it asks about speed, performance or comparisons, else query + \"example\" (a suffix the query already contains is skipped).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The research question."
+          },
+          "sub_queries": {
+            "description": "Up to 5 search queries covering different angles of the question. Recommended.",
+            "minItems": 1,
+            "maxItems": 5,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "num_results_per_query": {
+            "default": 5,
+            "description": "Results per sub-query (1-10, default 5).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_deep_research",
+      "title": "ContextFetch deep research",
+      "description": "Deep research in one call, no LLM: a deep search of the question, its sub-topics (or your sub_queries) as searches of their own, and the pages its list and index results link to, returned as one cited report: summary, key facts, a section per sub-topic and the sources, every passage quoted verbatim with [n]. Costs 10 credits. For a quick evidence pack use contextfetch_research.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The research question."
+          },
+          "sub_queries": {
+            "description": "Up to 3 search queries covering different angles of the question. Strongly recommended.",
+            "minItems": 1,
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "num_results_per_query": {
+            "default": 5,
+            "description": "Results per sub-query (1-25, default 5; at most 10 are used).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 25
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_answer",
+      "title": "ContextFetch extractive answer",
+      "description": "Answer a question with passages quoted verbatim from the web, never generated: searches, scores every passage of the top pages with a cross-encoder and returns the best ones with [n] citations to their sources. Use it for quick factual lookups; the quotes may not fully answer an open-ended question. Costs 1 credit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The question."
+          },
+          "num_results": {
+            "default": 5,
+            "description": "Pages searched for passages (1-10, default 5).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_crawl",
+      "title": "ContextFetch site crawl",
+      "description": "Crawl one website from a start URL and get its pages as Markdown: same-site links only, up to `max_depth` hops (<= 3) and `limit` pages (<= 50), robots.txt obeyed. Pass `query` to rank the pages by relevance and return only their relevant passages. Costs 1 credit per page returned.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public http(s) start URL."
+          },
+          "max_depth": {
+            "default": 1,
+            "description": "Link hops from the start page (0-3, default 1).",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "limit": {
+            "default": 10,
+            "description": "Maximum pages to return (1-50, default 10).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          },
+          "query": {
+            "description": "Optional topic: ranks pages and prunes each to the relevant passages.",
+            "type": "string",
+            "minLength": 1
+          },
+          "include_paths": {
+            "description": "Regexes; only follow links whose path matches one, e.g. [\"^/docs/\"].",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude_paths": {
+            "description": "Regexes; never follow links whose path matches one.",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_map",
+      "title": "ContextFetch site map",
+      "description": "List a website's URLs without fetching its pages: its sitemaps (from robots.txt, else /sitemap.xml) plus the start page's links, same site only, up to `limit` (<= 5,000). Use it to find the right pages before contextfetch_extract_url or contextfetch_crawl. Costs 1 credit.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public http(s) URL of the site (any page on it)."
+          },
+          "limit": {
+            "default": 100,
+            "description": "Maximum URLs (1-5,000, default 100).",
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 5000
+          },
+          "include_paths": {
+            "description": "Regexes; only list URLs whose path matches one, e.g. [\"^/blog/\"].",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclude_paths": {
+            "description": "Regexes; never list URLs whose path matches one.",
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_balance",
+      "title": "ContextFetch balance",
+      "description": "Show the API key's remaining credits, daily burn rate (7-day average) and auto-reload settings, including the last auto-reload error if a payment failed. Needs CONTEXTFETCH_API_KEY; free. Check it before long jobs.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_auto_reload",
+      "title": "ContextFetch auto-reload",
+      "description": "Turn auto-reload on or off, or change it: when credits drop below `threshold`, the saved card buys `pack` again, up to `monthly_max_usd` per month. Needs CONTEXTFETCH_API_KEY and a card saved at checkout. The monthly cap cannot be raised above $500 here.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "true to turn auto-reload on, false to turn it off."
+          },
+          "threshold": {
+            "description": "Reload when credits drop below this (100-100,000, default 1,000).",
+            "type": "integer",
+            "minimum": 100,
+            "maximum": 100000
+          },
+          "pack": {
+            "description": "Pack to buy: instant $15/15,000, builder $50/60,000, scale $150/200,000.",
+            "type": "string",
+            "enum": [
+              "instant",
+              "builder",
+              "scale"
+            ]
+          },
+          "monthly_max_usd": {
+            "description": "Monthly spending cap in USD (at most 500).",
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 500
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    },
+    {
+      "name": "contextfetch_get_free_key",
+      "title": "ContextFetch free API key",
+      "description": "Get a free ContextFetch API key with 2,500 searches (one per network, no sign-up). This session uses it right away; give it to your user so they can set CONTEXTFETCH_API_KEY to keep it.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "idempotentHint": false,
+        "openWorldHint": true
+      },
+      "execution": {
+        "taskSupport": "forbidden"
+      }
+    }
+  ],
+  "version": "1.1.0"
+}
