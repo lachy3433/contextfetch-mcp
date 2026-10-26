@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "contextfetch": {
+      "command": "npx",
+      "args": ["-y", "@contextfetch/mcp"],
+      "env": { "CONTEXTFETCH_API_KEY": "" }
+    }
+  }
+}
